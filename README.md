@@ -4,6 +4,8 @@ Skills for AI coding agents — Claude Code, OpenCode, Codex, and more.
 
 ## Install
 
+### Quick install (copy)
+
 ```bash
 npx onkar-skills
 ```
@@ -15,6 +17,27 @@ Force a specific agent:
 ```bash
 npx onkar-skills --agent=claude
 npx onkar-skills --agent=opencode
+```
+
+### Symlink install (stays up to date)
+
+Clone the repo and symlink the skills into each agent's skill directory. Each
+installed skill is a symlink into this repo, so a `git pull` keeps every agent
+current — no reinstall needed.
+
+```bash
+git clone https://github.com/onkarj012/skills.git
+cd skills
+npm run link    # or: bash scripts/link-skills.sh
+```
+
+Links into `~/.claude/skills`, `~/.opencode/skills`, `~/.codex/skills`, and
+`~/.cursor/skills`.
+
+List the skills in this repo:
+
+```bash
+npm run list    # or: bash scripts/list-skills.sh
 ```
 
 ## Skills
