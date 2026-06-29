@@ -50,7 +50,8 @@ for DEST in "${DESTS[@]}"; do
     target="$DEST/$name"
 
     if [ -e "$target" ] && [ ! -L "$target" ]; then
-      rm -rf "$target"
+      echo "error: refusing to replace existing non-symlink $target" >&2
+      exit 1
     fi
 
     ln -sfn "$src" "$target"
