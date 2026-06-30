@@ -1,23 +1,21 @@
 {
   "name": "onkar-skills",
-  "version": "1.0.0",
+  "version": "0.1.0",
+  "private": true,
   "description": "AI coding agent skills (Claude Code, OpenCode, Codex, and more)",
-  "bin": {
-    "onkar-skills": "./bin/install.js"
-  },
-  "scripts": {
-    "link": "bash scripts/link-skills.sh",
-    "list": "bash scripts/list-skills.sh"
-  },
-  "files": ["bin", "skills"],
-  "keywords": ["claude", "claude-code", "opencode", "codex", "skills", "ai-agent"],
+  "keywords": [
+    "claude",
+    "claude-code",
+    "opencode",
+    "codex",
+    "skills",
+    "ai-agent"
+  ],
   "author": "onkarj012",
   "license": "MIT",
-  "engines": {
-    "node": ">=16"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/onkarj012/SKILLS"
-  }
+  },
+  "packageManager": "npm@10.9.4"
 }
