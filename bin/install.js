@@ -5,7 +5,7 @@ const path = require('path');
 const os = require('os');
 
 const HOME = os.homedir();
-const SKILLS_DIR = path.join(__dirname, '..');
+const SKILLS_DIR = path.join(__dirname, '..', 'skills');
 
 // Known agent skill directories
 const AGENT_DESTINATIONS = {
@@ -15,9 +15,10 @@ const AGENT_DESTINATIONS = {
   'Cursor':       path.join(HOME, '.cursor', 'skills'),
 };
 
+// A skill is any directory under skills/ that contains a SKILL.md.
 const skills = fs.readdirSync(SKILLS_DIR).filter(f => {
   const full = path.join(SKILLS_DIR, f);
-  return fs.statSync(full).isDirectory() && f !== 'bin' && !f.startsWith('.');
+  return fs.statSync(full).isDirectory() && fs.existsSync(path.join(full, 'SKILL.md'));
 });
 
 if (skills.length === 0) {

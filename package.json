@@ -5,6 +5,11 @@
   "bin": {
     "onkar-skills": "./bin/install.js"
   },
+  "scripts": {
+    "link": "bash scripts/link-skills.sh",
+    "list": "bash scripts/list-skills.sh"
+  },
+  "files": ["bin", "skills"],
   "keywords": ["claude", "claude-code", "opencode", "codex", "skills", "ai-agent"],
   "author": "onkarj012",
   "license": "MIT",

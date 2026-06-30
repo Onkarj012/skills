@@ -6,18 +6,17 @@ A curated set of skills for AI coding agents.
 Claude Code, OpenCode, Codex, and Cursor. The goal is simple: keep high-value
 workflows portable, versioned, and easy to reuse across coding agents.
 
-## What is included
+## Included Skills
 
 | Skill | Trigger | Purpose |
 | --- | --- | --- |
 | `design-directions` | `/design-directions` | Generate five distinct UI directions for a project, each grounded in the product, audience, and stack. |
 | `report` | `/report` | Produce a single-file `REPORT.md` by scanning a repository and interviewing the user for missing product context. |
-| `bespoke-ui` | Agent-routed | Derive non-generic UI directions that fit the specific subject, audience, and job of the product. |
 
-## Supported agents
+## Supported Agents
 
-The installer copies skills into the standard local skill directory for each
-supported agent:
+The installer targets the standard local skill directory for each supported
+agent:
 
 | Agent | Skill directory |
 | --- | --- |
@@ -26,29 +25,23 @@ supported agent:
 | Codex | `~/.codex/skills/` |
 | Cursor | `~/.cursor/skills/` |
 
-By default, the installer detects which supported agents are present by checking
-for their configuration directories.
-
 ## Installation
 
-Run the installer with `npx`:
+There are two supported install flows.
+
+### Quick Install
+
+Use the published package when you want a copy-based install:
 
 ```bash
 npx onkar-skills
 ```
 
-The installer will:
+The installer detects supported agents by checking for their local configuration
+directories, creates any missing `skills/` directories, and copies the skills
+into each detected agent.
 
-1. Detect supported agents installed on your machine.
-2. Create the relevant `skills/` directories if needed.
-3. Copy each skill into every detected agent.
-4. Print a summary of what was installed.
-
-Restart your agent after installation so it can load the new skills.
-
-## Install for one agent
-
-Use `--agent=<name>` to target one agent explicitly:
+To install for one agent only:
 
 ```bash
 npx onkar-skills --agent="Claude Code"
@@ -57,50 +50,69 @@ npx onkar-skills --agent=Codex
 npx onkar-skills --agent=Cursor
 ```
 
-The value must match one of the supported agent names above, ignoring case.
+The `--agent` value must match one of the supported agent names above, ignoring
+case.
+
+### Symlink Install
+
+Use the repository when you want installed skills to stay current with `git
+pull`:
+
+```bash
+git clone https://github.com/onkarj012/SKILLS.git
+cd SKILLS
+npm run link
+```
+
+This creates symlinks from each agent skill directory back into this repository.
+After that, updating the checkout updates the installed skills:
+
+```bash
+git pull
+```
+
+To list the skills available in the repository:
+
+```bash
+npm run list
+```
 
 ## Updating
 
-Re-run the installer whenever you want the latest published skills:
+For the copy-based install, re-run the package installer:
 
 ```bash
 npx onkar-skills@latest
 ```
 
-The current installer performs a copy-based install. Existing installed skill
-files are overwritten with the version from the package.
+For the symlink install, update the repository:
+
+```bash
+git pull
+```
 
 ## Uninstalling
 
-Remove a skill by deleting its folder from the relevant agent directory. For
-example:
+Remove a skill by deleting its folder or symlink from the relevant agent
+directory. For example:
 
 ```bash
 rm -rf ~/.claude/skills/design-directions
 rm -rf ~/.codex/skills/report
 ```
 
-Restart the agent after removing skills.
+Restart the agent after installing, updating, or removing skills.
 
-## Local development
+## Repository Layout
 
-Clone the repository and run the installer from the working tree:
-
-```bash
-git clone https://github.com/onkarj012/SKILLS.git
-cd SKILLS
-node bin/install.js
+```text
+bin/install.js                # copy-based npx installer
+scripts/link-skills.sh        # symlink installer for local checkouts
+scripts/list-skills.sh        # lists installable skills
+skills/<name>/SKILL.md        # skill instructions
 ```
 
-To test one destination:
-
-```bash
-node bin/install.js --agent=Codex
-```
-
-Skills are directories that contain a `SKILL.md` file. Keep each skill focused,
-self-contained, and documented enough that an agent can follow it without
-external context.
+A skill is installable when it lives at `skills/<name>/SKILL.md`.
 
 ## Requirements
 
