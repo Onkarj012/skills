@@ -16,6 +16,7 @@ agents.
 | `design-directions` | `/design-directions` | Generate five distinct UI directions for a project, each grounded in the product, audience, and stack. |
 | `report` | `/report` | Produce a single-file `REPORT.md` by scanning a repository and interviewing the user for missing product context. |
 | `bespoke-ui` | Agent-routed | Derive non-generic UI directions that fit the specific subject, audience, and job of the product. |
+| `orchestrator` | `/orchestrator` | Keep the main model planning, routing, and reviewing while delegating substantial execution to subagents. |
 
 ## Quickstart
 
@@ -46,6 +47,12 @@ Install one skill:
 
 ```bash
 npx skills@latest add onkarj012/SKILLS --skill design-directions
+```
+
+Install orchestrator mode:
+
+```bash
+npx skills@latest add onkarj012/SKILLS --skill orchestrator
 ```
 
 Install globally instead of project-level:
