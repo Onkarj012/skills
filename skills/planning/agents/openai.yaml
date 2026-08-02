@@ -1,0 +1,6 @@
+interface:
+  display_name: "Planning"
+  short_description: "Turn deep decisions into executable Waymark plans"
+  default_prompt: "Use $planning to turn this work into an implementation-ready Waymark plan."
+policy:
+  allow_implicit_invocation: false
