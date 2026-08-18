@@ -1,0 +1,6 @@
+interface:
+  display_name: "Delegation"
+  short_description: "Route fenced work to the right available model"
+  default_prompt: "Use $delegation to choose and fence the right worker for this task."
+policy:
+  allow_implicit_invocation: true

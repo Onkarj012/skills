@@ -17,6 +17,11 @@ agents.
 | `report` | `/report` | Produce a single-file `REPORT.md` by scanning a repository and interviewing the user for missing product context. |
 | `bespoke-ui` | Agent-routed | Derive non-generic UI directions that fit the specific subject, audience, and job of the product. |
 | `orchestrator` | `/orchestrator` | Keep the main model planning, routing, and reviewing while delegating substantial execution to subagents. |
+| `delegation` | Agent-routed | Choose an available model and effort tier, then fence every delegated task. |
+| `planning` | `/planning` | Turn deep decisions into an implementation-ready specification and approved Waymark plan. |
+| `waymark` | Agent-routed | Publish and safely maintain polished HTML artifacts on Waymark. |
+| `batch-grill-me` | `/batch-grill-me` | Resolve every currently-unblocked design decision round by round. |
+| `wayfinder` | `/wayfinder` | Map multi-session uncertainty as decision tickets on an issue tracker. |
 
 ## Quickstart
 
@@ -53,6 +58,19 @@ Install orchestrator mode:
 
 ```bash
 npx skills@latest add onkarj012/SKILLS --skill orchestrator
+```
+
+Install the planning workflow and publisher:
+
+```bash
+npx skills@latest add onkarj012/SKILLS --skill planning
+npx skills@latest add onkarj012/SKILLS --skill waymark
+```
+
+Install delegation routing:
+
+```bash
+npx skills@latest add onkarj012/SKILLS --skill delegation
 ```
 
 Install globally instead of project-level:
@@ -95,7 +113,7 @@ npx skills@latest add . --agent codex --copy
 
 ## Requirements
 
-- Node.js 16 or newer
+- Node.js 18.9 or newer (required for the `node:test` runner and `node --test`)
 - `npx`, which ships with npm
 
 ## License
