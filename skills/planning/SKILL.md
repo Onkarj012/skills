@@ -132,9 +132,9 @@ TTL choice, and keep credentials and secrets out of the page. For an approved
 handoff, provide the approved plan with a short orientation summary and its
 preview or public URL; include more than a naked Markdown path.
 
-After creation or update, record the exact page ID, URL, TTL, and remote update
-time locally, then verify the public URL. Approval for one action never expands
-to a later action.
+Use JSON create/update output as authoritative: after creation or update, record
+the exact page ID, URL, TTL, and returned `updated_at` locally, then verify the
+public URL. Approval for one action never expands to a later action.
 
 Completion criterion: every approved action has its corresponding verified
 result recorded, and every unapproved action remains untouched.
@@ -142,17 +142,26 @@ result recorded, and every unapproved action remains untouched.
 ### 6. Maintain the plan and its publication record
 
 Update an existing page only at its stable URL and only after that exact update
-action is approved. Verify local artifacts, fetch current remote metadata, and
-compare its update time with `last_known_updated_at`. An unexpected remote
-update timestamp is a hard publication STOP because Waymark is last-writer-wins.
-Any material scope, cost, risk, or commitment change returns the artifact to
-`draft` and requires renewed approval.
+action is approved. Fetch `waymark get --json <id>` and use its authoritative
+`updated_at` as `last_known_updated_at`. The final update must be server
+enforced:
+
+```bash
+waymark update --if-updated-at "<last-known-updated-at>" --json <id> <approved-body-file>
+```
+
+For direct JSON requests, send `"if_updated_at":"<last-known-updated-at>"`.
+A prior read followed by an unconditional update is not concurrency protection.
+Stop on HTTP 409 or any conflict; reconcile with a fresh JSON get and renewed
+approval before retrying. Record the authoritative new `updated_at` from JSON
+update output. Any material scope, cost, risk, or commitment change returns the
+artifact to `draft` and requires renewed approval.
 
 Mark completed or superseded status in Markdown, body HTML, and metadata. Keep
 execution progress out of the plan's role as a specification. Delete nothing
 automatically; create immutable milestone snapshots only when explicitly
 requested.
 
-Completion criterion: the stable URL, remote freshness comparison, status, and
-local publication record are synchronized, or the run is stopped with the
-unexpected update or renewed-approval requirement documented.
+Completion criterion: the stable URL, server-enforced remote freshness result,
+status, and local publication record are synchronized, or the run is stopped
+with the HTTP 409/conflict or renewed-approval requirement documented.

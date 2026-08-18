@@ -64,6 +64,18 @@ Each ticket is a **child issue** of the map; the tracker's issue id is its ident
 
 Each ticket carries a `wayfinder:<type>` label — one of `research`, `prototype`, `grilling`, `task` (see [Ticket Types](#ticket-types)).
 
+Every ticket also persists its required mode as metadata in the body:
+
+```markdown
+## Mode
+
+HITL | AFK
+```
+
+Task tickets must state `HITL` or `AFK` explicitly so later sessions know
+whether autonomous work is allowed; the mode must agree with the ticket type's
+rules.
+
 A session **claims** a ticket by assigning it to the dev driving the map, **first**, before any work, so concurrent sessions skip it. That assignee _is_ the claim: an open, unassigned ticket is unclaimed.
 
 Blocking uses the tracker's **native** dependency relationship — essential because it renders the frontier _visually_ in the tracker's own UI, so the human sees what's takeable without opening the map. Only a tracker that lacks native blocking falls back to a body convention. A ticket is **unblocked** when every ticket blocking it is closed; the **frontier** is the open, unblocked, unclaimed children — the edge of the known.
@@ -98,7 +110,7 @@ Fog only ever gathers _toward_ the destination. The destination fixes the scope,
 
 Out-of-scope work never graduates — the frontier stops at the destination — so it returns only if the destination is redrawn, and then as a fresh effort, not a resumption.
 
-Ruling something out of scope is a scoping act, not a step on the route. When a ticket that already exists turns out to sit past the destination — mis-scoped in while charting, or exposed by a resolution — **close it** (a closed ticket is unambiguously off the frontier) and leave one line in the **Out of scope** section: the gist plus why it's out of scope, linking the closed ticket. It stays out of **Decisions so far**, which records the route actually walked — a scope boundary isn't a step on it.
+Ruling something out of scope is a scoping act, not a step on the route. When a ticket that already exists turns out to sit past the destination — mis-scoped in while charting, or exposed by a resolution — **close it** (a closed ticket is unambiguously off the frontier) and leave one line in the **Out of scope** section: the gist plus why it's out of scope, linking the closed ticket. It stays out of **Decisions so far**, which records the route actually walked — a scope boundary isn't a step on it. Never delete a tracker ticket without the user's explicit confirmation. Without that confirmation, close the ticket and mark it out of scope instead.
 
 ## Invocation
 
@@ -120,9 +132,9 @@ User invokes with a loose idea.
 User invokes with a map (URL or number). A ticket is **optional** — without one, you pick the next decision, not the user.
 
 1. Load the **map** — the low-res view, not every ticket body.
-2. Choose the ticket. If the user named one, use it. Otherwise take the first frontier ticket in order. **Claim it**: assign it to yourself before any work.
+2. Choose the ticket. If the user named one, validate that it is open, unblocked, and unclaimed before using it. If it is ineligible, ask for an eligible ticket or an explicitly documented exception; do not claim it. If the user did not name one, take the first frontier ticket in order. **Claim it**: assign it to yourself only after these checks and before any work.
 3. Resolve it — **zoom as needed**: fetch the full body of any related or closed ticket on demand; invoke the skills the `## Notes` block names. If in doubt, use `/grilling` and `/domain-modeling`.
 4. Record the resolution: post the answer as a **resolution comment**, **close** the issue, and **append a context pointer** to the map's Decisions-so-far.
-5. Add newly-surfaced tickets (create-then-wire); graduate any fog the answer has made specifiable, clearing each graduated patch from **Not yet specified** so it lives only as its new ticket. If the answer reveals a ticket — this one or another — sits beyond the destination, **rule it out of scope** rather than resolving it on the route. If the decision invalidates other parts of the map, update or delete those tickets.
+5. Add newly-surfaced tickets (create-then-wire); graduate any fog the answer has made specifiable, clearing each graduated patch from **Not yet specified** so it lives only as its new ticket. If the answer reveals a ticket — this one or another — sits beyond the destination, **rule it out of scope** rather than resolving it on the route. If the decision invalidates other parts of the map, update them; delete a ticket only after the user's explicit confirmation, otherwise close it and mark it out of scope.
 
 The user may run unblocked tickets in parallel, so expect other sessions to be editing the tracker concurrently.

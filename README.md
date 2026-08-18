@@ -113,7 +113,7 @@ npx skills@latest add . --agent codex --copy
 
 ## Requirements
 
-- Node.js 16 or newer
+- Node.js 18.9 or newer (required for the `node:test` runner and `node --test`)
 - `npx`, which ships with npm
 
 ## License

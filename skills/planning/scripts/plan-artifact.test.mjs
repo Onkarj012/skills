@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -108,6 +108,18 @@ test('stamp preserves remote publication metadata and discards unrelated fields'
   assert.equal('unrelated' in value, false);
 });
 
+test('stamp preserves approved status only while canonical hashes are unchanged', async () => {
+  const files = await fixture();
+  assert.equal(run(files.root, 'stamp', files.relativeMetadata, '--status', 'approved').status, 0);
+  assert.equal(run(files.root, 'stamp', files.relativeMetadata).status, 0);
+  assert.equal((await metadata(files.metadataPath)).status, 'approved');
+  await writeFile(files.sourcePath, '# Example plan\n\nChanged.\n');
+  assert.equal(run(files.root, 'stamp', files.relativeMetadata).status, 0);
+  assert.equal((await metadata(files.metadataPath)).status, 'draft');
+  assert.equal(run(files.root, 'stamp', files.relativeMetadata, '--status', 'completed').status, 0);
+  assert.equal((await metadata(files.metadataPath)).status, 'completed');
+});
+
 test('verify accepts a clean synchronized artifact without writing it', async () => {
   const files = await fixture();
   assert.equal(run(files.root, 'stamp', files.relativeMetadata).status, 0);
@@ -174,4 +186,45 @@ test('verify rejects metadata paths that are confined but inconsistent', async (
   const result = run(files.root, 'verify', files.relativeMetadata);
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /source_path must be docs\/plans\/example-plan\.md/);
+});
+
+test('stamp rejects a canonical source symlink that escapes the artifact root', async () => {
+  const files = await fixture();
+  const outside = await mkdtemp(path.join(tmpdir(), 'plan-artifact-outside-'));
+  temporaryRoots.push(outside);
+  const outsideSource = path.join(outside, 'outside.md');
+  await writeFile(outsideSource, '# Outside\n');
+  await rm(files.sourcePath);
+  await symlink(outsideSource, files.sourcePath);
+  const result = run(files.root, 'stamp', files.relativeMetadata);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /outside artifact root/);
+});
+
+test('verify rejects a canonical body symlink that escapes the artifact root', async () => {
+  const files = await fixture();
+  assert.equal(run(files.root, 'stamp', files.relativeMetadata).status, 0);
+  const outside = await mkdtemp(path.join(tmpdir(), 'plan-artifact-outside-'));
+  temporaryRoots.push(outside);
+  const outsideHtml = path.join(outside, 'outside.html');
+  await writeFile(outsideHtml, '<article class="plan" data-plan-profile="systems"></article>\n');
+  await rm(files.htmlPath);
+  await symlink(outsideHtml, files.htmlPath);
+  const result = run(files.root, 'verify', files.relativeMetadata);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /outside artifact root/);
+});
+
+test('stamp rejects event-handler attributes and scriptable href or src schemes', async () => {
+  const unsafeBodies = [
+    '<article class="plan" data-plan-profile="systems" onLoad="alert(1)"></article>\n',
+    '<article class="plan" data-plan-profile="systems"><a href="JaVa\nScRiPt:\u0009alert(1)">bad</a></article>\n',
+    '<article class="plan" data-plan-profile="systems"><img src="\u0000DATA:text/html,alert(1)"></article>\n',
+  ];
+  for (const body of unsafeBodies) {
+    const files = await fixture({ html: body });
+    const result = run(files.root, 'stamp', files.relativeMetadata);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /(?:event-handler attribute|scriptable URL scheme)/);
+  }
 });

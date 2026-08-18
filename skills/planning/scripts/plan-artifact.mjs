@@ -2,7 +2,7 @@
 
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { lstat, mkdir, readFile, realpath, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -126,6 +126,56 @@ function resolveWithin(root, candidate, label) {
   return absolute;
 }
 
+function isWithin(root, candidate) {
+  const relative = path.relative(root, candidate);
+  return relative === '' || (relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+}
+
+async function assertPhysicalPathWithinRoot(root, candidate, label) {
+  let physicalRoot;
+  try {
+    physicalRoot = await realpath(root);
+  } catch (error) {
+    throw new ArtifactError(`cannot resolve artifact root ${root}: ${error.message}`);
+  }
+
+  let current = candidate;
+  while (true) {
+    try {
+      const physical = await realpath(current);
+      if (!isWithin(physicalRoot, physical)) {
+        throw new ArtifactError(`${label} resolves outside artifact root ${root}`);
+      }
+      return;
+    } catch (error) {
+      if (error instanceof ArtifactError) {
+        throw error;
+      }
+      if (error.code !== 'ENOENT') {
+        throw new ArtifactError(`cannot resolve ${label} ${candidate}: ${error.message}`);
+      }
+      try {
+        const stats = await lstat(current);
+        if (stats.isSymbolicLink()) {
+          throw new ArtifactError(`${label} uses a symlink that may escape artifact root ${root}`);
+        }
+      } catch (lstatError) {
+        if (lstatError instanceof ArtifactError) {
+          throw lstatError;
+        }
+        if (lstatError.code !== 'ENOENT') {
+          throw new ArtifactError(`cannot inspect ${label} ${candidate}: ${lstatError.message}`);
+        }
+      }
+      const parent = path.dirname(current);
+      if (parent === current) {
+        throw new ArtifactError(`cannot resolve ${label} ${candidate}`);
+      }
+      current = parent;
+    }
+  }
+}
+
 function storedPath(root, absolute) {
   return path.relative(root, absolute).split(path.sep).join('/');
 }
@@ -193,7 +243,15 @@ function parseAttributes(source) {
   const pattern = /(?:^|\s)([^\s=/>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
   let match;
   while ((match = pattern.exec(source)) !== null) {
-    attributes.set(match[1].toLowerCase(), match[2] ?? match[3] ?? match[4] ?? '');
+    const name = match[1].toLowerCase();
+    if (/^on/i.test(name)) {
+      throw new ArtifactError(`event-handler attribute is not allowed: ${match[1]}`);
+    }
+    const value = match[2] ?? match[3] ?? match[4] ?? '';
+    if ((name === 'href' || name === 'src') && /^(?:javascript|vbscript|data):/i.test(value.replace(/[\u0000-\u0020\u007f]/g, ''))) {
+      throw new ArtifactError(`scriptable URL scheme is not allowed in ${name}`);
+    }
+    attributes.set(name, value);
   }
   return attributes;
 }
@@ -347,6 +405,13 @@ function validateSchema(metadata) {
 
 async function stamp(options) {
   const paths = canonicalPaths(options.root, options.metadata);
+  const temporary = `${paths.metadata}.${process.pid}.tmp`;
+  await Promise.all([
+    assertPhysicalPathWithinRoot(options.root, paths.metadata, 'metadata file'),
+    assertPhysicalPathWithinRoot(options.root, paths.source, 'Markdown source'),
+    assertPhysicalPathWithinRoot(options.root, paths.html, 'body HTML'),
+    assertPhysicalPathWithinRoot(options.root, temporary, 'temporary metadata file'),
+  ]);
   const [source, html] = await Promise.all([
     readText(paths.source, 'Markdown source'),
     readText(paths.html, 'body HTML'),
@@ -370,7 +435,8 @@ async function stamp(options) {
   if (existsSync(paths.metadata)) {
     existing = await readJson(paths.metadata);
   }
-  const status = options.status ?? (STATUSES.has(existing.status) ? existing.status : 'draft');
+  const hashesUnchanged = existing.source_sha256 === sha256(source) && existing.html_sha256 === sha256(html);
+  const status = options.status ?? (hashesUnchanged && STATUSES.has(existing.status) ? existing.status : 'draft');
   if (!STATUSES.has(status)) {
     throw new ArtifactError(`invalid status: ${status}`);
   }
@@ -393,7 +459,10 @@ async function stamp(options) {
   validateSchema(metadata);
 
   await mkdir(path.dirname(paths.metadata), { recursive: true });
-  const temporary = `${paths.metadata}.${process.pid}.tmp`;
+  await Promise.all([
+    assertPhysicalPathWithinRoot(options.root, temporary, 'temporary metadata file'),
+    assertPhysicalPathWithinRoot(options.root, paths.metadata, 'metadata file'),
+  ]);
   await writeFile(temporary, `${JSON.stringify(metadata, null, 2)}\n`, 'utf8');
   await rename(temporary, paths.metadata);
   process.stdout.write(`Stamped ${storedPath(options.root, paths.metadata)}\n`);
@@ -401,20 +470,29 @@ async function stamp(options) {
 
 async function verify(options) {
   const paths = canonicalPaths(options.root, options.metadata);
+  await Promise.all([
+    assertPhysicalPathWithinRoot(options.root, paths.metadata, 'metadata file'),
+    assertPhysicalPathWithinRoot(options.root, paths.source, 'Markdown source'),
+    assertPhysicalPathWithinRoot(options.root, paths.html, 'body HTML'),
+  ]);
   const metadata = await readJson(paths.metadata);
   validateSchema(metadata);
 
   if (metadata.slug !== paths.slug) {
     throw new ArtifactError(`slug ${metadata.slug} does not match metadata path slug ${paths.slug}`);
   }
-  resolveStoredPath(options.root, metadata.source_path, 'source_path');
-  resolveStoredPath(options.root, metadata.html_path, 'html_path');
+  const sourcePath = resolveStoredPath(options.root, metadata.source_path, 'source_path');
+  const htmlPath = resolveStoredPath(options.root, metadata.html_path, 'html_path');
   if (metadata.source_path !== paths.sourceStored) {
     throw new ArtifactError(`source_path must be ${paths.sourceStored}`);
   }
   if (metadata.html_path !== paths.htmlStored) {
     throw new ArtifactError(`html_path must be ${paths.htmlStored}`);
   }
+  await Promise.all([
+    assertPhysicalPathWithinRoot(options.root, sourcePath, 'source_path'),
+    assertPhysicalPathWithinRoot(options.root, htmlPath, 'html_path'),
+  ]);
 
   const [source, html] = await Promise.all([
     readText(paths.source, 'Markdown source'),

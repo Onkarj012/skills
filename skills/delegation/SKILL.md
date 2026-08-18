@@ -14,12 +14,21 @@ Before using the model table, read the provider registry at
 conversation-scoped user override. An unavailable provider and every model
 behind it are ineligible, even when the table would otherwise prefer them.
 
+If the registry is absent, use the documented model-table defaults and any
+conversation-scoped override. If an existing registry cannot be read or parsed,
+fail closed: stop for clarification or use only an explicitly named safe
+fallback whose availability is already known. Never route a provider whose
+status is unknown.
+
 Read [PROVIDERS.md](PROVIDERS.md) for registry semantics and the natural-language
 controls for enabling, pausing, and listing providers. Do not probe a paid
 provider merely to test whether quota has reset. If the preferred provider is
-unavailable, quietly choose the best eligible fallback and mention the
-substitution once. Ask only when no suitable provider remains or the fallback
-materially increases paid cost.
+unavailable, quietly choose the best eligible fallback only within the already
+approved provider and cost boundary, and mention the substitution once.
+Crossing a provider trust boundary requires fresh user approval or an explicit
+allowlist even when cost is unchanged. Ask when no suitable provider remains, a
+fallback crosses that boundary, or an escalation would leave the approved
+provider/cost scope. Escalation is allowed only inside that approved scope.
 
 ## The model table
 
@@ -44,18 +53,19 @@ conversation overrides cannot relax this boundary.
 | fable-5       | 9   | 9     | 2    | **HUMAN OPERATOR ONLY — agents must never invoke** |
 | gpt-5.6-sol   | 8   | 5     | 8    | `codex exec -m gpt-5.6-sol "<spec>"` |
 | opus-4.8      | 7   | 8     | 4    | `Agent`/`Workflow` param `model: 'opus'` |
-| grok-4.5      | 7   | 6     | 8    | `grok -p "<spec>" --always-approve --output-format json` |
+| grok-4.5      | 7   | 6     | 8    | `grok -p "<spec>" --cwd <task-dir> --sandbox strict --always-approve --output-format json` |
 | gpt-5.6-luna  | 6   | 5     | 9    | `codex exec -m gpt-5.6-luna "<spec>"` |
 | sonnet-5      | 6   | 7     | 5    | `Agent`/`Workflow` param `model: 'sonnet'` |
 | gpt-5.6-terra | 5   | 5     | 9    | `codex exec -m gpt-5.6-terra "<spec>"` |
 | open-weights  | var | var   | 9    | `opencode run -m opencode-go/<id> "<spec>"` |
 
 - gpt-5.6 naming (sol > terra > luna) is weight class, not quality order: **luna outperforms terra** in practice. Luna is the light-tier default; pick terra only when the task explicitly names it.
-- Always pass `-m` on codex dispatches. `~/.codex/config.toml` defaults to luna — the user's worker tier for direct, interactive use — so a bare `codex exec` silently routes to luna. The config default is a convenience, never a routing input.
+- Always pass `-m` on codex dispatches. A bare `codex exec` uses the CLI default and is never a routing input.
+- Before any `gpt-5.6-sol`, `gpt-5.6-luna`, or `gpt-5.6-terra` route, verify Codex CLI `>= 0.144.0`; exclude those routes on older versions.
 - Claude rows: the `model:` param shown is Claude Code's `Agent`/`Workflow` form. In opencode, spawn via the `task` tool (model set in agent config) or one-shot with `opencode run -m opencode/claude-<tier>` — mechanics in the `opencode-cli` skill.
 - `open-weights` = the OpenCode Go catalog (deepseek, glm, kimi, qwen, minimax, mimo). The id must carry the `opencode-go/` prefix — a bare model name never resolves; get exact ids with `opencode models | grep <name>`. PATH quirks and flags: `opencode-cli` skill.
 - Google models (`google/…` via opencode or Gemini CLI) are a fallback only — frequent server errors.
-- `grok-4.5` = xAI's Grok CLI (subscription auth via `grok.com`) — a peer headless worker to codex, with real tool use (file read/write, bash) confirmed working unattended. `-p` is single-turn to stdout; `--always-approve` required unattended; `--output-format json|plain`; `--cwd <dir>` scopes to a repo without `cd`; `--sandbox <profile>` for untrusted specs.
+- `grok-4.5` = xAI's Grok CLI (subscription auth via `grok.com`) — a peer headless worker to codex, with real tool use (file read/write, bash) confirmed working unattended. Required unattended invocation: `-p` is single-turn to stdout, `--cwd <task-dir>` scopes to the task, `--sandbox strict` contains it, `--always-approve` authorizes tool use, and `--output-format json|plain` is explicit.
 - Never Haiku — sonnet is the floor for delegated Claude work.
 
 ## Effort tiers (the primary cost lever)

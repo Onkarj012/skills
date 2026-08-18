@@ -13,7 +13,7 @@ The default multi-stage shape is a pipeline: each item flows through all stages 
 ## Discovery
 
 - **Multi-modal sweep** — parallel agents each searching a *different way* (by container, by content, by entity, by time), blind to each other. Use when no single search angle finds everything.
-- **Loop-until-dry** — for unknown-size discovery (bugs, edge cases, call sites), keep spawning finders until K consecutive rounds return nothing new; fixed counters miss the tail. Dedup fresh findings against ALL previously seen (not just confirmed) — otherwise judge-rejected findings reappear every round and the loop never converges.
+- **Loop-until-dry** — for unknown-size discovery (bugs, edge cases, call sites), declare K consecutive-empty rounds and a total round or cost budget, then keep spawning finders until K consecutive rounds return nothing new. Fixed counters miss the tail. Dedup fresh findings against ALL previously seen (not just confirmed) — otherwise judge-rejected findings reappear every round and the loop never converges. If the total round or cost cap arrives first, report partial coverage and the uncompleted dry-out condition.
 
 ## Verification
 
