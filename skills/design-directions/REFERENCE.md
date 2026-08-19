@@ -1,29 +1,8 @@
-# UI Five — Style Taxonomy
+# Composition axes — contrast vocabulary
 
-> This list is a starting point, not a ceiling. Invent styles, hybrids, or directions not listed here when they better fit the project's vibe. The goal is contrast and fit — not coverage of this taxonomy.
+Vocabulary for spreading variants across the contrast matrix. These are **composition** axes — how a variant is built, not what costume it wears. Style itself comes from the fit engine (`bespoke-ui`); never pick a look from this file. Invent values not listed when the subject calls for them — the goal is contrast and fit, not coverage of this taxonomy.
 
-## Visual Styles
-
-| Style | Signature traits |
-|---|---|
-| **Minimalist** | Whitespace-heavy, 1-2 typefaces, no decoration |
-| **Brutalist** | Raw HTML aesthetics, visible structure, blunt typography, unexpected grids |
-| **Glassmorphism** | Frosted-glass cards, blur backdrop, translucent layers |
-| **Neumorphism** | Soft shadows, extruded surfaces, monochrome palette |
-| **Skeuomorphic** | Texture, depth, mimics physical objects |
-| **Claymorphism** | Puffy 3D shapes, rounded blobs, pastel + saturated |
-| **Flat / Material** | Solid fills, no depth, clean iconography |
-| **Retro / Lo-fi** | Pixel fonts, grain texture, muted palette, 90s web nostalgia |
-| **Swiss / Grid** | Strict typographic grid, editorial, Helvetica-adjacent |
-
-**Banned combos** (too similar — always split these):
-- Minimalist + Flat (pick one)
-- Glassmorphism + Neumorphism (pick one)
-- Claymorphism + Neumorphism (pick one)
-
----
-
-## Layout Patterns
+## Layout patterns
 
 | Layout | Description |
 |---|---|
@@ -36,9 +15,11 @@
 | **Wizard / stepper** | Sequential steps, one screen at a time |
 | **Split-screen** | Two equal columns, often form + preview |
 
----
+## Density spectrum
 
-## Interaction Patterns
+Airy (one focus per viewport) → comfortable (grouped, breathing room) → compact (scannable rows) → packed (monitoring-grade, every pixel informs). Pick per variant from the task the direction serves, and hold it consistently within the variant.
+
+## Interaction patterns
 
 | Pattern | Description |
 |---|---|
@@ -51,29 +32,15 @@
 | **Sheet / drawer** | Actions slide in from bottom or side |
 | **Accordion / progressive** | Content revealed on demand, no page nav |
 
----
+## Color strategies
 
-## Color Philosophies
+How a palette is *deployed* — the palette's values come from the direction's subject-world, never from here.
 
-| Philosophy | Traits |
+| Strategy | Traits |
 |---|---|
-| **Monochrome** | Black, white, one neutral — contrast only |
-| **Vibrant dark** | Dark base, saturated accent, neon-adjacent |
-| **Warm brand** | Amber, terracotta, cream — editorial/startup feel |
-| **Cool system** | Blue-grey, slate, enterprise-safe |
-| **Gradient** | Multi-stop gradients as backgrounds or accents |
-| **High-contrast** | WCAG AAA target, stark black/white + one accent |
-
----
-
-## Variant Inspiration Combos
-
-Pre-validated combinations that work well as starting points:
-
-1. Minimalist · single-column · inline-edit · monochrome
-2. Glassmorphism · card grid · modal-driven · vibrant dark
-3. Brutalist · full-bleed · command palette · high-contrast
-4. Skeuomorphic · sidebar + main · wizard/stepper · warm brand
-5. Claymorphism · bento/asymmetric · drag-and-drop · gradient
-
-Swap axes freely — these are starting points, not rules.
+| **Monochrome + structure** | One ink, one paper; hierarchy carried entirely by type and space |
+| **Scarce accent** | Neutral field, one accent spent only on what matters most |
+| **Dark field** | Dark surfaces as the base material; light and color as signal |
+| **Warm material** | Palette drawn from a physical material world (paper, wood, fabric) |
+| **Semantic-led** | Color used almost only as meaning (states, deltas, categories) |
+| **High-contrast** | Stark figure/ground, WCAG AAA-grade, no mid-tones |

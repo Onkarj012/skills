@@ -14,16 +14,19 @@ agents.
 | Skill | Trigger | Purpose |
 | --- | --- | --- |
 | `design-directions` | `/design-directions` | Generate five distinct UI directions for a project, each grounded in the product, audience, and stack. |
-| `report` | `/report` | Produce a single-file `REPORT.md` by scanning a repository and interviewing the user for missing product context. |
+| `report` | `/report` | Produce a polished, self-contained `REPORT.html` by scanning a repository and interviewing the user for missing product context. |
 | `bespoke-ui` | Agent-routed | Derive non-generic UI directions that fit the specific subject, audience, and job of the product. |
 | `orchestrator` | `/orchestrator` | Keep the main model planning, routing, and reviewing while delegating substantial execution to subagents. |
 | `delegation` | Agent-routed | Choose an available model and effort tier, then fence every delegated task. |
 | `planning` | `/planning` | Turn deep decisions into an implementation-ready specification and approved Waymark plan. |
-| `waymark` | Agent-routed | Publish and safely maintain polished HTML artifacts on Waymark. |
+| `waymark` | Agent-routed | Preview locally, then publish and safely maintain reports and approved visual plans on Waymark. |
 | `batch-grill-me` | `/batch-grill-me` | Resolve every currently-unblocked design decision round by round. |
 | `wayfinder` | `/wayfinder` | Map multi-session uncertainty as decision tickets on an issue tracker. |
 
 ## Quickstart
+
+`/report` creates `REPORT.html` by default. Markdown output and Waymark
+publication are opt-in.
 
 Run the skills.sh installer:
 
@@ -48,9 +51,16 @@ Install every skill for every detected agent:
 npx skills@latest add onkarj012/SKILLS --all
 ```
 
-Install one skill:
+Install one standalone skill:
 
 ```bash
+npx skills@latest add onkarj012/SKILLS --skill report
+```
+
+Install design directions with its required fit engine:
+
+```bash
+npx skills@latest add onkarj012/SKILLS --skill bespoke-ui
 npx skills@latest add onkarj012/SKILLS --skill design-directions
 ```
 

@@ -1,11 +1,13 @@
 ---
 name: design-directions
-description: Generate 5 contrast-maximal UI mockups for a project, each grounded in the project's vibe. Use when user wants UI mockups, design exploration, "5 versions of", "show me different designs for X", or invokes /design-directions. Asks dynamic questions to understand style requirements before generating. Supports React/Next.js, SvelteKit, Nuxt/Vue, and HTML/CSS.
+description: Generate 3-5 contrast-maximal working UI mockups, each fit-grounded in the specific project via the bespoke-ui skill. Use when the user wants to explore design options as real files — "show me versions", "mockups", "different designs for X". Supports React/Next.js, SvelteKit, Nuxt/Vue, and HTML/CSS. Requires the bespoke-ui skill (its fit engine and craft doctrine).
 ---
 
 # Design Directions
 
-Five **contrast** variants — distinct points in design space, each grounded in the project's vibe. Contrast governs all axes simultaneously: color, layout, typography, density, interaction. No two variants share a dominant strategy on any axis.
+Build 3–5 working variants — distinct points in design space, every one grounded in what the project actually is. Fit comes first (the `bespoke-ui` fit engine), contrast second (no two variants share a dominant strategy on any composition axis), craft throughout (`bespoke-ui`'s CRAFT.md).
+
+**Hard dependency:** this skill requires `bespoke-ui` installed alongside it — its Steps 1–6 are Phase 3 here, and its `CRAFT.md` is the build standard. Without it, stop and say so.
 
 ## Phase 1 — Intake
 
@@ -18,15 +20,17 @@ Ask in one message:
 
 Infer project type from intake. Ask 2–3 questions relevant to that type. Don't ask what you can infer.
 
-**Landing / marketing**: tone (bold/playful/serious/minimal), product category, primary CTA goal  
-**Dashboard / data app**: data density preference (scannable vs detailed), user expertise, key metric types  
-**E-commerce**: product type, brand personality, primary conversion action  
-**SaaS / tool**: core task the user comes to do, user expertise level, most-used actions  
-**Portfolio / personal**: creator's personality, target audience or industries, content volume  
+**Landing / marketing**: tone (bold/playful/serious/minimal), product category, primary CTA goal
+**Dashboard / data app**: data density preference (scannable vs detailed), user expertise, key metric types
+**E-commerce**: product type, brand personality, primary conversion action
+**SaaS / tool**: core task the user comes to do, user expertise level, most-used actions
+**Portfolio / personal**: creator's personality, target audience or industries, content volume
 
-## Phase 3 — Style synthesis
+## Phase 3 — Fit engine
 
-In 2–3 lines: state the vibe you're designing for and the 5 design directions you'll take. Pause — user may redirect before you generate.
+Run `bespoke-ui` Steps 1–6 (subject, fit-filter, grounding, contrast, signature, absorbed test) with the intake as input. It returns 3–5 fit-grounded directions, each with a fit-justification and a named signature — as many as genuinely distinct fits exist, never a filler variant to hit five.
+
+Write the brief: per direction, 3–5 lines — name, fit-justification, palette (4–6 named hex), type roles, layout concept, signature. Then **pause** — the user may redirect before generation.
 
 ## Phase 4 — Contrast matrix
 
@@ -34,20 +38,15 @@ Before writing code, output the plan:
 
 | # | Color | Layout | Typography | Density | Interaction |
 |---|---|---|---|---|---|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
-| 4 | | | | | |
-| 5 | | | | | |
 
-Hard constraints:
-- All 5 fit the project's vibe — no jarring mismatches
-- No axis value repeated across variants
-- At least one light, one dark color scheme
+Hard constraint: **no axis value repeated across variants.** Composition vocabulary for the axes → [REFERENCE.md](REFERENCE.md) — inspiration, not a checklist.
+
+Default expectations — dropped only with one stated reason when fit forbids:
+- At least one light and one dark variant ("dark fights a care-context product — all variants light, surfaces differentiate instead")
 - At least one unconventional or editorial layout
 - At least one mobile-first layout
 
-Style, layout, interaction, and color taxonomy → [REFERENCE.md](REFERENCE.md) — use as inspiration, not a checklist. Invent hybrids or unlisted styles when they fit the project better.
+Fit always outranks coverage: a spread the subject can't support is the slop menu wearing a matrix.
 
 ## Phase 5 — Generate
 
@@ -55,23 +54,29 @@ Style, layout, interaction, and color taxonomy → [REFERENCE.md](REFERENCE.md) 
 
 | Stack | Pattern |
 |---|---|
-| React/Next.js App Router | `app/1/page.tsx` → `app/5/page.tsx` |
-| React/Next.js Pages Router | `pages/1.tsx` → `pages/5.tsx` |
-| SvelteKit | `src/routes/1/+page.svelte` → `src/routes/5/+page.svelte` |
-| Nuxt / Vue | `pages/1.vue` → `pages/5.vue` |
-| HTML/CSS | `1.html` → `5.html` |
+| React/Next.js App Router | `app/1/page.tsx` → `app/N/page.tsx` |
+| React/Next.js Pages Router | `pages/1.tsx` → `pages/N.tsx` |
+| SvelteKit | `src/routes/1/+page.svelte` → `src/routes/N/+page.svelte` |
+| Nuxt / Vue | `pages/1.vue` → `pages/N.vue` |
+| HTML/CSS | `1.html` → `N.html` |
 
-Each file: fully self-contained, no shared imports between variants. Visually complete — no placeholder boxes, no lorem soup. Functional — interactable, not a static wireframe. Write all 5; don't stop early.
+Each file: fully self-contained, no shared imports between variants. Built to the standard in `bespoke-ui`'s [CRAFT.md](../bespoke-ui/CRAFT.md) — coherence to its direction, systematic tokens, designed states, real content, its quality floor. Each variant's signature element present and working. Write all of them; don't stop early.
 
-## Phase 6 — Summary
+## Phase 6 — Critique pass
 
-One-liner per variant:
+Run CRAFT.md's mandatory critique pass once across all variants: see the real output (render if the environment can), judge each against its direction brief and the craft territories, argue that each is generic, fix every finding. Also check the set: if two variants converged during the build, re-separate them on the axis they collapsed.
+
+## Phase 7 — Summary
+
+One-liner per variant — direction name, composition, signature:
+
+```text
+/1 — Fill-ledger · dense grid, right-aligned tabular columns · dark · signature: the running P&L tape
+/2 — Trade-desk calm · sidebar + focused canvas · paper-light · signature: one oversized position card
+/3 — Terminal-native · keyboard-first, command palette · phosphor-green · signature: the ⌘K order ticket
+/4 — Print-report · editorial single column · newsprint-duotone · signature: the broadsheet daily summary
 ```
-/1 — Minimal · single-column · monochrome · low density
-/2 — Bold editorial · asymmetric grid · vibrant dark · high density
-/3 — Glassmorphism · card grid · modal-driven · gradient
-/4 — Brutalist · full-bleed · command palette · high-contrast
-/5 — Claymorphism · bento · drag-and-drop · pastel
-```
 
-**Completion**: all 5 exist, each passes the contrast test — seeing one gives no information about any other's visual strategy.
+The user is the final critic: they pick, redirect, or ask for another round on a specific variant.
+
+**Completion**: all variants exist, each passes the contrast test — seeing one gives no information about any other's composition — and each traces to its fit-justification.

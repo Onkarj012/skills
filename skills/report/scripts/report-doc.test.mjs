@@ -1,0 +1,203 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { after, test } from "node:test";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+
+const script = fileURLToPath(new URL("./report-doc.mjs", import.meta.url));
+const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "report-doc-test-"));
+
+after(() => fs.rmSync(tempDir, { recursive: true, force: true }));
+
+function run(args) {
+  return spawnSync(process.execPath, [script, ...args], {
+    encoding: "utf8",
+  });
+}
+
+function checkFixture(name, source) {
+  const file = path.join(tempDir, name);
+  fs.writeFileSync(file, source);
+  return run(["check", file]);
+}
+
+const compliant = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>System report</title>
+    <style>
+      :root { color-scheme: light; }
+      a:focus-visible { outline: 2px solid currentColor; }
+      @media print { nav { display: none; } }
+      @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+    </style>
+  </head>
+  <body>
+    <nav><a href="#overview">Overview</a><a href="https://example.com/source">Source</a></nav>
+    <main><h1 id="overview">System report</h1><p>Evidence-backed content.</p></main>
+  </body>
+</html>`;
+
+test("accepts a compliant self-contained document", () => {
+  const result = checkFixture("compliant.html", compliant);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("reports missing required metadata", () => {
+  const result = checkFixture(
+    "missing-metadata.html",
+    `<html><head><title> </title></head><body></body></html>`,
+  );
+  assert.equal(result.status, 1);
+  for (const text of ["doctype", "lang", "charset", "viewport", "title"]) {
+    assert.match(result.stderr, new RegExp(text, "i"));
+  }
+});
+
+test("requires print rules", () => {
+  const result = checkFixture(
+    "missing-print.html",
+    compliant.replace("@media print { nav { display: none; } }", ""),
+  );
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /@media print/i);
+});
+
+test("rejects external scripts, styles, imports, CSS, and images", () => {
+  const result = checkFixture(
+    "external-resources.html",
+    `<!doctype html><html lang="en"><head>
+      <meta charset="utf-8"><meta name="viewport" content="width=device-width">
+      <title>External</title><link rel="stylesheet" href="https://example.com/report.css">
+      <style>@import url("https://example.com/fonts.css"); .x { background: url(https://example.com/bg.png); }</style>
+    </head><body><script src="https://example.com/app.js"></script>
+      <img src="https://example.com/a.png" srcset="https://example.com/a@2x.png 2x" poster="https://example.com/poster.png">
+      <style>@media print { body { color: black; } }</style></body></html>`,
+  );
+  assert.equal(result.status, 1);
+  for (const text of ["script", "stylesheet", "@import", "CSS url", "external img[src]", "srcset", "poster"]) {
+    assert.match(result.stderr, new RegExp(text.replace(/[()[\]]/g, "\\$&"), "i"));
+  }
+});
+
+test("rejects relative subresources too", () => {
+  const result = checkFixture(
+    "relative-resources.html",
+    `<!doctype html><html lang="en"><head>
+      <meta charset="utf-8"><meta name="viewport" content="width=device-width">
+      <title>Relative resources</title>
+      <style>@media print { body { color: black; } } .hero { background: url(./hero.svg); }</style>
+    </head><body><img src="./logo.svg"><video poster="poster.jpg"></video></body></html>`,
+  );
+  assert.equal(result.status, 1);
+  for (const text of ["CSS url", "external img[src]", "external video[poster]"]) {
+    assert.match(result.stderr, new RegExp(text.replace(/[()[\]]/g, "\\$&"), "i"));
+  }
+});
+
+test("rejects mixed srcset candidates", () => {
+  const result = checkFixture(
+    "mixed-srcset.html",
+    compliant.replace(
+      "</main>",
+      '<img src="data:image/svg+xml,%3Csvg%3E%3C/svg%3E" srcset="#mark 1x, ./logo.svg 2x"></main>',
+    ),
+  );
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /srcset is forbidden/i);
+});
+
+test("rejects external CSS URLs and image-set in style attributes", () => {
+  const result = checkFixture(
+    "external-inline-style.html",
+    compliant.replace(
+      "</main>",
+      `<section style="background: url(https://example.com/pixel.png)"></section><div style="background-image: image-set('https://example.com/a.png' 1x)"></div></main>`,
+    ),
+  );
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /external section\[style\] CSS url/i);
+  assert.match(result.stderr, /div\[style\] image-set/i);
+});
+
+test("rejects CSS image-set in style blocks", () => {
+  const result = checkFixture(
+    "external-image-set.html",
+    compliant.replace(
+      "@media print { nav { display: none; } }",
+      '@media print { nav { display: none; } } .hero { background: -webkit-image-set("https://example.com/a.png" 1x); }',
+    ),
+  );
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /CSS image-set/i);
+});
+
+for (const [name, markup, message] of [
+  ["iframe[src]", '<iframe src="https://example.com/frame.html"></iframe>', "external iframe[src]"],
+  ["iframe[srcdoc]", '<iframe srcdoc="&lt;img src=https://example.com/pixel.png&gt;"></iframe>', "iframe[srcdoc] is forbidden"],
+  ["object[data]", '<object data="./report.pdf"></object>', "external object[data]"],
+  ["embed[src]", '<embed src="https://example.com/report.pdf">', "external embed[src]"],
+  ["SVG script[href]", '<svg><script href="https://example.com/app.js"></script></svg>', "external script[href]"],
+  ["SVG script[xlink:href]", '<svg><script xlink:href="./app.js"></script></svg>', "external script[xlink:href]"],
+  ["track[src]", '<track src="./captions.vtt">', "external track[src]"],
+  ["SVG use[href]", '<svg><use href="./icons.svg#mark"></use></svg>', "external use[href]"],
+  ["SVG use[xlink:href]", '<svg><use xlink:href="./icons.svg#mark"></use></svg>', "external use[xlink:href]"],
+  ["SVG image[href]", '<svg><image href="https://example.com/chart.svg"></image></svg>', "external image[href]"],
+  ["SVG feImage[href]", '<svg><filter><feImage href="./texture.png"></feImage></filter></svg>', "external feimage[href]"],
+  ["input[type=image][src]", '<input type="image" src="./submit.png" alt="Submit">', "external input[src]"],
+  ["link[href]", '<link rel="preload" href="https://example.com/font.woff2">', "external link[href]"],
+]) {
+  test(`rejects external ${name} resources`, () => {
+    const result = checkFixture(
+      `external-${name.replace(/[^a-z]+/gi, "-").toLowerCase()}.html`,
+      compliant.replace(
+        name === "link[href]" ? "</head>" : "</main>",
+        `${markup}${name === "link[href]" ? "</head>" : "</main>"}`,
+      ),
+    );
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, new RegExp(message.replace(/[()[\]]/g, "\\$&"), "i"));
+  });
+}
+
+test("rejects legacy external background attributes", () => {
+  const result = checkFixture(
+    "external-background.html",
+    compliant.replace("<body>", '<body background="https://example.com/paper.png">'),
+  );
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /external body\[background\]/i);
+});
+
+test("allows inline data resources, metadata links, and external anchor links", () => {
+  const result = checkFixture(
+    "inline-resources.html",
+    compliant.replace(
+      "</main>",
+      '<img alt="Inline mark" src="data:image/svg+xml,%3Csvg%3E%3C/svg%3E"><svg><use href="#mark"></use></svg><script type="application/json" data-src="evidence.json">{}</script><div class="mark" style="background: url(#mark)"></div></main>',
+    ).replace(
+      "</head>",
+      '<link rel="canonical" href="https://example.com/report"></head>',
+    ).replace(
+      "@media print { nav { display: none; } }",
+      '@media print { nav { display: none; } } .mark { background: url(#mark); }',
+    ),
+  );
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("fails for a missing file", () => {
+  const result = run(["check", path.join(tempDir, "does-not-exist.html")]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /cannot read/i);
+});
+
+test("prints help", () => {
+  const result = run(["--help"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Usage:/);
+});
