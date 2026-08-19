@@ -1,22 +1,20 @@
 ---
 name: bespoke-ui
-description: Derive distinct, fit-for-purpose UI directions grounded in the specific project, then build them. Use when the user wants distinctive or non-generic UI ("make it unique", "not look AI-made", "break the norm"), or wants design options curated to the app's real purpose instead of a generic style menu. Other skills (e.g. design-directions) reach for this when they need fit-grounded directions rather than arbitrary contrast.
+description: Derive distinct, fit-for-purpose UI directions grounded in the specific project, then build the chosen one to professional craft. Use when the user wants distinctive or non-generic UI ("make it unique", "not look AI-made", "break the norm"), or wants design options curated to the app's real purpose instead of a generic style menu. design-directions invokes this as its fit engine.
 ---
 
 # Bespoke UI
 
 Generic AI design has a tell deeper than purple gradients: it reaches for the **slop menu** — the reflexive Brutalist / Organic / Glassmorphism / Neumorphism lineup — and bolts one onto any project regardless of what the project is. Five "distinct" directions that all ignore the subject is not variety. It is five guesses from the same hat.
 
-This skill makes every direction earn its **fit**: drawn from the subject's own world, filtered against what the project actually is, and distinct from its siblings on composition rather than costume. The output is a short brief the user can redirect, then code.
+This skill makes every direction earn its **fit**: drawn from the subject's own world, filtered against what the project actually is, and distinct from its siblings on composition rather than costume. The output is a short brief the user can redirect, then code built to the craft standard in [CRAFT.md](CRAFT.md).
 
 The single check, applied to every choice: the **slop test** — could a generic LLM have produced this for any project? If yes, it is slop. If it could only exist for *this* subject, it fits.
 
 ## Branches
 
-- **Standalone** — run all steps; present 3-5 directions; user picks one; build it.
-- **Addon to `design-directions`** — run Steps 1-6 to produce fit-grounded directions, then hand them to `design-directions` as its Phase 3 style synthesis (it builds the 5 variant files). Your job is replacing its generic style-pick with fitted directions; it keeps its file routing and contrast matrix.
-
-Do not duplicate `design-taste-frontend`'s anti-slop pre-flight (Inter, AI-purple, three-equal-cards, em-dash ban, Jane Doe, etc.). When writing code, that checklist still applies — point to it, run it, do not restate it here.
+- **Standalone** — run all steps; present 3–5 directions; user picks one; build it.
+- **Fit engine for `design-directions`** — that skill's Phase 3 runs Steps 1–6 here to produce fit-grounded directions, then returns to its own flow (contrast matrix, file routing, building every variant). **The fit-engine branch ends at Step 7's handoff; Steps 8–10 are standalone only.**
 
 ## Step 1 — Read the subject
 
@@ -28,7 +26,7 @@ The subject's own world — its materials, instruments, artifacts, vocabulary �
 
 ## Step 2 — Fit-filter
 
-Open `ARCHETYPES.md` and locate the nearest project archetype. Take its **anti-fits** as hard eliminations — aesthetics that fight this project type are off the table now. Take its fitting directions as a launch pad, never a cage.
+Open [ARCHETYPES.md](ARCHETYPES.md) and locate the nearest project archetype. Take its **anti-fits** as hard eliminations — aesthetics that fight this project type are off the table now. Take its fitting directions as a launch pad, never a cage.
 
 If no archetype fits cleanly, derive from the subject-world directly (Step 1).
 
@@ -44,16 +42,16 @@ Any direction NOT from the archetype map must pass a one-line subject-justificat
 
 ## Step 4 — Contrast on composition
 
-Once fit is locked, the directions must still differ — but they contrast on **how they are built**, not on wild costume swings (all 5 fitting an efficiency tool should not converge into 5 minimal clones, nor diverge into a circus). Spread them across:
+Once fit is locked, the directions must still differ — but they contrast on **how they are built**, not on wild costume swings (all directions fitting an efficiency tool should not converge into minimal clones, nor diverge into a circus). Spread them across:
 
 - **Component placement & layout** — where things sit, what the grid does, what breaks it
 - **Information density** — airy to packed
 - **Typographic voice** — the type's personality and hierarchy
 - **Interaction model** — how the user moves through it
 
-3-5 directions. Seeing one should give no information about another's *composition*, while all share the same fit.
+As many directions as genuinely distinct fits exist — 3–5. Forcing a fifth when only four fit produces the filler variant. Seeing one direction should give no information about another's *composition*, while all share the same fit.
 
-**Completion:** no two directions repeat a value on the same contrast axis; all still pass Step 3's fit-justification.
+**Completion:** no two directions repeat a value on the same contrast axis; all still pass Step 3's fit-justification; count justified by fit, not quota.
 
 ## Step 5 — Name the signature
 
@@ -69,23 +67,29 @@ Was this aesthetic absorbed by the culture — once novel, now expected? Cream+s
 
 ## Step 7 — Brief, then pause
 
-Write the brief: per direction, 3-5 lines — name, fit-justification, palette (4-6 named hex), type roles, layout concept, signature. Then **pause** for redirect before building.
+Write the brief: per direction, 3–5 lines — name, fit-justification, palette (4–6 named hex), type roles, layout concept, signature. Then **pause** for redirect before building. The user's redirect outranks everything derived so far.
 
-If addon to `design-directions`: hand these directions over now as its Phase 3 and let it build the 5 files. **Addon branch ends here. Steps 8–9 are standalone only.**
+If running as fit engine for `design-directions`: hand the directions back now — it builds every variant per [CRAFT.md](CRAFT.md). **Fit-engine branch ends here.**
 
-**Completion:** brief shown; user has picked a direction (standalone) or directions handed off (addon).
+**Completion:** brief shown; user has picked a direction (standalone) or directions handed off (fit engine).
 
 ## Step 8 — Novelty critique
 
-Before building, run the slop test as an adversarial pass — self-assessment is too lenient. Argue, hard, that the chosen direction *could* have come from a generic LLM. If the argument lands, sharpen the weakest element (usually the signature or the palette) until it fails. For a thorough run, spin this as a subagent prompted to prove the design generic. Use the specificity test below as the adversarial checklist.
+Before building, run the slop test as an adversarial pass — self-assessment is too lenient. Argue, hard, that the chosen direction *could* have come from a generic LLM. If the argument lands, sharpen the weakest element (usually the signature or the palette) until it fails. Where the environment allows, spin this as a fresh agent prompted to prove the design generic; single-threaded, argue it yourself in earnest. Use the specificity test below as the adversarial checklist.
 
 **Completion:** the slop test has been attempted and fails for the chosen direction.
 
 ## Step 9 — Build
 
-Build the chosen direction in the target stack — HTML/CSS or React, Tailwind v4. Derive every color and type decision from the brief; do not drift. Run `design-taste-frontend`'s pre-flight as the quality floor (responsive, contrast, reduced-motion, no AI tells). Match motion to the direction — restraint for precise directions, choreography only where the subject calls for it.
+Build the chosen direction in the project's stack (default: one self-contained HTML/CSS file when no stack exists). Derive every color and type decision from the brief; do not drift. Build to the standard in [CRAFT.md](CRAFT.md) — coherence, systems, hierarchy, detail, copy, motion, theming, data display, and its non-negotiable quality floor.
 
-**Completion:** code matches the brief exactly; `design-taste-frontend` pre-flight passes; signature is present and works.
+**Completion:** code matches the brief exactly; every CRAFT.md territory addressed; signature present and working.
+
+## Step 10 — Critique pass, then user verdict
+
+Run the mandatory critique pass exactly as specified in [CRAFT.md](CRAFT.md) ("The critique pass"): see the real output, judge against brief and craft, argue against it, fix every finding. Then present to the user with tradeoffs named. The user is the final critic; iterate on their verdict.
+
+**Completion:** one critique pass done, findings fixed, result presented for user verdict.
 
 ## The specificity test (reference)
 

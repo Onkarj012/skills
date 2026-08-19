@@ -1,0 +1,6 @@
+interface:
+  display_name: "Report"
+  short_description: "Create a self-contained HTML system report"
+  default_prompt: "Use $report to scan this repository and produce a polished, evidence-backed REPORT.html."
+policy:
+  allow_implicit_invocation: false

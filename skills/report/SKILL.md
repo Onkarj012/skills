@@ -1,87 +1,68 @@
 ---
 name: report
-description: User-invoked. Produce single-file deep system report (REPORT.md) by scanning current repo + interviewing user for non-code context. Trigger /report.
+description: User-invoked. Produce a self-contained, agent-designed REPORT.html by scanning the current repository and interviewing the user only for missing product context. Trigger /report.
 disable-model-invocation: true
 ---
 
 # report
 
-Build one **REPORT.md** at repo root covering name, idea, inspiration, system, architecture, code. Hybrid source: scan code for structure, grill user for intent.
+Produce one complete, self-contained `REPORT.html` at the repository root. It
+is a code-aligned system report, not a fixed template. Scan first, ask only for
+context the repository cannot establish, and never fabricate missing facts.
 
 ## Workflow
 
-1. **Locate target.** cwd is the system. If no repo here, ask user for path. Confirm before writing.
-2. **Scan pass (silent).** Read in parallel:
-   - `README*`, `package.json`/`pyproject.toml`/`Cargo.toml`/`go.mod` — name, deps, scripts
-   - top-level dirs (depth 2) — module map
-   - entry points (`src/index.*`, `main.*`, `app/*`)
-   - config (`.env.example`, `*.config.*`)
-   - any existing `docs/`, `ARCHITECTURE.md`
-   Collect: stack, deps, dir structure, entry points, build/run commands.
-3. **Interview pass.** Use AskUserQuestion. Ask only what scan cannot answer. Batch 2-4 questions per turn. Cover in order:
-   - **Idea** — one-sentence pitch, problem solved
-   - **Inspiration** — prior art, what sparked it, what's different
-   - **Target users** — who, why they care
-   - **Decisions/tradeoffs** — non-obvious choices, rejected alternatives
-   - **Roadmap** — next, blocked, deferred
-   Skip section if user says "skip" or scan already answers.
-4. **Draft REPORT.md** using template below. Fill every section. Mark unknowns `_TBD_` rather than fabricate.
-5. **Ask HTML?** Single question: also render `REPORT.html`? If yes, use `pandoc REPORT.md -o REPORT.html --standalone --css` or inline minimal CSS via `<style>` block. If pandoc missing, write self-contained HTML with embedded CSS directly.
-6. **Done criterion.** REPORT.md exists at repo root, every template section present, no section empty except explicit `_TBD_`. Echo file path to user.
+1. **Locate and protect the target.** Treat cwd as the system. If it is not a
+   repository, ask for its path. Before writing, if `REPORT.html` or
+   `REPORT.md` already exists, ask whether to overwrite, update, or abort.
+2. **Scan silently before asking.** Read the README, manifests and lockfiles,
+   top-level directories to depth 2, entry points, configuration examples,
+   architecture/design docs, build and test scripts, and relevant source
+   modules. Record file paths and line references where useful. Separate
+   implemented behavior from aspirational documentation and mark unresolved
+   facts as `_TBD_`.
+3. **Interview only the gap.** Ask only what the scan cannot establish. Cover
+   the pitch/idea, inspiration and difference, audience, capabilities and
+   non-goals, non-obvious decisions and tradeoffs, and roadmap. Audience is
+   required when the scan cannot establish it. Batch concise questions; skip
+   any answer the repository already proves.
+4. **Design the report.** Ground composition in the reported system's
+   subject-world and audience. When installed, apply Steps 1–6 of
+   `../bespoke-ui/SKILL.md` and consult `../bespoke-ui/CRAFT.md` for coherence,
+   hierarchy, systems, detail, copy, motion, and its quality floor. Adapt those
+   principles to a report; do not add a fixed report style, CSS skeleton,
+   component grammar, or five-style menu. Do not pause for design options
+   unless the user explicitly requests options.
+5. **Compose the canonical artifact.** Use the coverage checklist in
+   [report-contract.md](references/report-contract.md), but choose the
+   headings, layout, typography, diagrams, and information hierarchy yourself.
+   Write exactly one complete `<!doctype html>` document with inline CSS,
+   responsive behavior, print rules, semantic/accessibility structure, and no
+   external subresources. Reports are raw HTML: never themed, never body-only,
+   and never sent through `waymark preview`. JavaScript is optional and must
+   not be needed to read the report. Escape every scanned or user-provided
+   value before inserting it; Waymark trusts publisher HTML.
+6. **Critique once before handoff.** Inspect or render the exact document at
+   desktop, narrow mobile, and print widths. Check content visibility,
+   navigation, focus, contrast, heading order, alt text, reduced motion, and
+   horizontal overflow. Make one adversarial generic/slop challenge: argue
+   that a generic LLM/template could have made it, then fix every finding. Run
+   `node skills/report/scripts/report-doc.mjs check REPORT.html`.
 
-## Template
+## Modes and handoff
 
-```markdown
-# {{Name}}
+- **Default:** HTML-only; `REPORT.html` is canonical.
+- **Markdown:** create `REPORT.md` only when explicitly requested. It is a
+  secondary companion, not the source that changes the HTML default; do not
+  use Pandoc conversion.
+- **Publish:** publish or update only when explicitly requested. Before any
+  remote Waymark operation, run `waymark status` and continue only after a
+  successful authenticated result. For a new raw report use
+  `waymark create --raw --json`; for an existing page use
+  `waymark update --raw --if-updated-at "<last-known-updated-at>" --json`.
+  Record the returned page ID, URL, TTL, and `updated_at` when maintaining a
+  page. Never publish automatically from `/report`.
 
-> {{one-sentence pitch}}
-
-## Idea
-- Problem
-- Solution
-- Why now
-
-## Inspiration
-- Prior art / influences
-- What's different here
-
-## System
-- Target users
-- Core capabilities (bullets)
-- Non-goals
-
-## Architecture
-- Stack: {{lang, framework, runtime, db, infra}}
-- Diagram (mermaid or ascii)
-- Module map: {{dir → responsibility}}
-- Data flow: {{request → response path}}
-- External deps / integrations
-
-## Code
-- Entry points: {{file:line}}
-- Key modules: {{path — purpose}}
-- Build/run: {{commands}}
-- Test: {{commands, coverage approach}}
-- Config / env vars
-
-## Decisions & Tradeoffs
-- {{decision}} — {{reason}} — {{rejected alt}}
-
-## Roadmap
-- Next
-- Blocked
-- Deferred
-
-## Appendix
-- Repo: {{path or url}}
-- Generated: {{ISO date}}
-- Sources: scan + interview
-```
-
-## Rules
-
-- **One file.** Never split into multiple .md.
-- **No fabrication.** `_TBD_` beats guessing.
-- **Scan before ask.** Don't ask user what `package.json` already answers.
-- **Mermaid for diagrams** when stack supports it; ascii fallback.
-- **Idempotent.** If REPORT.md exists, diff intent: ask overwrite vs update vs abort.
+Done means the requested local artifact exists, the critique and structural
+check pass, and any optional markdown or publication action was explicitly
+requested and completed. Report unknowns and skipped checks plainly.

@@ -48,7 +48,7 @@ Each archetype: **fitting directions** (with the why) and **anti-fits** (the slo
 
 ## Luxury / premium brand
 **Fitting:** Restraint-as-luxury (space and precision over ornament); material-honest (real photography, considered texture); editorial-confident (the brand doesn't shout).
-**Anti-fits:** The AI premium-default (beige+brass+oxblood+espresso — banned, see design-taste-frontend), busy density, neon.
+**Anti-fits:** The AI premium-default (beige+brass+oxblood+espresso — the absorbed default, eliminate), busy density, neon.
 
 ## AI / ML product
 **Fitting:** Capability-demonstrated (show the model working, live, not described); systematic-precise (engineering credibility); restrained-futurism (confidence over sci-fi cliché).
