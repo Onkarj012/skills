@@ -51,9 +51,16 @@ Install every skill for every detected agent:
 npx skills@latest add onkarj012/SKILLS --all
 ```
 
-Install one skill:
+Install one standalone skill:
 
 ```bash
+npx skills@latest add onkarj012/SKILLS --skill report
+```
+
+Install design directions with its required fit engine:
+
+```bash
+npx skills@latest add onkarj012/SKILLS --skill bespoke-ui
 npx skills@latest add onkarj012/SKILLS --skill design-directions
 ```
 

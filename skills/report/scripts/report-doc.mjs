@@ -3,12 +3,16 @@
 import fs from "node:fs";
 
 const HELP = `Usage:
-  node skills/report/scripts/report-doc.mjs check <file.html>
-  node skills/report/scripts/report-doc.mjs --help`;
+  node <report-skill-directory>/scripts/report-doc.mjs check <file.html>
+  node <report-skill-directory>/scripts/report-doc.mjs --help`;
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 function getAttribute(tag, name) {
   const pattern = new RegExp(
-    `\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`,
+    `(?:^|\\s)${escapeRegExp(name)}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`,
     "i",
   );
   const match = tag.match(pattern);
@@ -28,6 +32,10 @@ function hasExternalCssUrl(styles) {
   return [...styles.matchAll(/url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*))\s*\)/gi)].some(
     (match) => hasExternalResource(match[1] ?? match[2] ?? match[3] ?? ""),
   );
+}
+
+function hasCssImageSet(styles) {
+  return /(?:-webkit-)?image-set\s*\(/i.test(styles);
 }
 
 function checkHtml(source) {
@@ -80,13 +88,30 @@ function checkHtml(source) {
     violations.push("missing @media print rules");
   }
 
-  if (/<script\b[^>]*\bsrc\s*=/i.test(source)) {
-    violations.push("external script is forbidden: remove script[src]");
-  }
-
+  const metadataLinkRels = new Set([
+    "alternate",
+    "author",
+    "canonical",
+    "help",
+    "license",
+    "me",
+    "next",
+    "prev",
+    "search",
+    "tag",
+  ]);
   const linkTags = [...source.matchAll(/<link\b[^>]*>/gi)].map((match) => match[0]);
-  if (linkTags.some((tag) => getAttribute(tag, "rel")?.toLowerCase().split(/\s+/).includes("stylesheet"))) {
-    violations.push("stylesheet link is forbidden; keep CSS inline");
+  for (const tag of linkTags) {
+    const rels = (getAttribute(tag, "rel") ?? "").toLowerCase().split(/\s+/).filter(Boolean);
+    const href = getAttribute(tag, "href");
+    if (rels.includes("stylesheet")) {
+      violations.push("stylesheet link is forbidden; keep CSS inline");
+      continue;
+    }
+    const metadataOnly = rels.length > 0 && rels.every((rel) => metadataLinkRels.has(rel));
+    if (href !== null && hasExternalResource(href) && !metadataOnly) {
+      violations.push("external link[href] is forbidden");
+    }
   }
 
   if (/@import\b/i.test(styles)) {
@@ -96,6 +121,9 @@ function checkHtml(source) {
   if (hasExternalCssUrl(styles)) {
     violations.push("external CSS url() is forbidden");
   }
+  if (hasCssImageSet(styles)) {
+    violations.push("CSS image-set() is forbidden; use a single inline image");
+  }
 
   const resourceAttributes = {
     img: ["src", "srcset", "poster"],
@@ -103,17 +131,33 @@ function checkHtml(source) {
     source: ["src", "srcset", "poster"],
     video: ["src", "srcset", "poster"],
     audio: ["src", "srcset", "poster"],
-    iframe: ["src"],
+    iframe: ["src", "srcdoc"],
     object: ["data"],
     embed: ["src"],
+    script: ["src", "href", "xlink:href"],
     track: ["src"],
-    use: ["href"],
-    link: ["href"],
+    use: ["href", "xlink:href"],
+    image: ["href", "xlink:href"],
+    feimage: ["href", "xlink:href"],
+    input: ["src"],
   };
   const resourceTags = [...source.matchAll(/<([a-z][\w:-]*)\b[^>]*>/gi)];
   for (const match of resourceTags) {
     const tag = match[0];
-    const tagName = match[1].toLowerCase();
+    const tagName = match[1].toLowerCase().split(":").at(-1);
+    const inlineStyle = getAttribute(tag, "style");
+    if (inlineStyle !== null && hasExternalCssUrl(inlineStyle)) {
+      violations.push(`external ${tagName}[style] CSS url() is forbidden`);
+    }
+    if (inlineStyle !== null && hasCssImageSet(inlineStyle)) {
+      violations.push(`${tagName}[style] image-set() is forbidden; use a single inline image`);
+    }
+
+    const background = getAttribute(tag, "background");
+    if (background !== null && hasExternalResource(background)) {
+      violations.push(`external ${tagName}[background] is forbidden`);
+    }
+
     const attributes = resourceAttributes[tagName];
     if (!attributes) {
       continue;
@@ -125,6 +169,8 @@ function checkHtml(source) {
       }
       if (attribute === "srcset") {
         violations.push("srcset is forbidden; use a single inline src");
+      } else if (attribute === "srcdoc") {
+        violations.push("iframe[srcdoc] is forbidden; keep report content in the document");
       } else if (hasExternalResource(value)) {
         violations.push(`external ${tagName}[${attribute}] is forbidden`);
       }

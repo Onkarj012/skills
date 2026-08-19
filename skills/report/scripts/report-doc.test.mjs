@@ -111,12 +111,44 @@ test("rejects mixed srcset candidates", () => {
   assert.match(result.stderr, /srcset is forbidden/i);
 });
 
+test("rejects external CSS URLs and image-set in style attributes", () => {
+  const result = checkFixture(
+    "external-inline-style.html",
+    compliant.replace(
+      "</main>",
+      `<section style="background: url(https://example.com/pixel.png)"></section><div style="background-image: image-set('https://example.com/a.png' 1x)"></div></main>`,
+    ),
+  );
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /external section\[style\] CSS url/i);
+  assert.match(result.stderr, /div\[style\] image-set/i);
+});
+
+test("rejects CSS image-set in style blocks", () => {
+  const result = checkFixture(
+    "external-image-set.html",
+    compliant.replace(
+      "@media print { nav { display: none; } }",
+      '@media print { nav { display: none; } } .hero { background: -webkit-image-set("https://example.com/a.png" 1x); }',
+    ),
+  );
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /CSS image-set/i);
+});
+
 for (const [name, markup, message] of [
   ["iframe[src]", '<iframe src="https://example.com/frame.html"></iframe>', "external iframe[src]"],
+  ["iframe[srcdoc]", '<iframe srcdoc="&lt;img src=https://example.com/pixel.png&gt;"></iframe>', "iframe[srcdoc] is forbidden"],
   ["object[data]", '<object data="./report.pdf"></object>', "external object[data]"],
   ["embed[src]", '<embed src="https://example.com/report.pdf">', "external embed[src]"],
+  ["SVG script[href]", '<svg><script href="https://example.com/app.js"></script></svg>', "external script[href]"],
+  ["SVG script[xlink:href]", '<svg><script xlink:href="./app.js"></script></svg>', "external script[xlink:href]"],
   ["track[src]", '<track src="./captions.vtt">', "external track[src]"],
   ["SVG use[href]", '<svg><use href="./icons.svg#mark"></use></svg>', "external use[href]"],
+  ["SVG use[xlink:href]", '<svg><use xlink:href="./icons.svg#mark"></use></svg>', "external use[xlink:href]"],
+  ["SVG image[href]", '<svg><image href="https://example.com/chart.svg"></image></svg>', "external image[href]"],
+  ["SVG feImage[href]", '<svg><filter><feImage href="./texture.png"></feImage></filter></svg>', "external feimage[href]"],
+  ["input[type=image][src]", '<input type="image" src="./submit.png" alt="Submit">', "external input[src]"],
   ["link[href]", '<link rel="preload" href="https://example.com/font.woff2">', "external link[href]"],
 ]) {
   test(`rejects external ${name} resources`, () => {
@@ -132,12 +164,24 @@ for (const [name, markup, message] of [
   });
 }
 
-test("allows inline data resources and external anchor links", () => {
+test("rejects legacy external background attributes", () => {
+  const result = checkFixture(
+    "external-background.html",
+    compliant.replace("<body>", '<body background="https://example.com/paper.png">'),
+  );
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /external body\[background\]/i);
+});
+
+test("allows inline data resources, metadata links, and external anchor links", () => {
   const result = checkFixture(
     "inline-resources.html",
     compliant.replace(
       "</main>",
-      '<img alt="Inline mark" src="data:image/svg+xml,%3Csvg%3E%3C/svg%3E"><div class="mark"></div></main>',
+      '<img alt="Inline mark" src="data:image/svg+xml,%3Csvg%3E%3C/svg%3E"><svg><use href="#mark"></use></svg><script type="application/json" data-src="evidence.json">{}</script><div class="mark" style="background: url(#mark)"></div></main>',
+    ).replace(
+      "</head>",
+      '<link rel="canonical" href="https://example.com/report"></head>',
     ).replace(
       "@media print { nav { display: none; } }",
       '@media print { nav { display: none; } } .mark { background: url(#mark); }',

@@ -22,8 +22,10 @@ the system and audience.
 - One complete raw HTML document with `<!doctype html>` and an `<html lang="…">` root.
 - The document has UTF-8 charset metadata, a viewport meta tag, and a non-empty title.
 - CSS is inline; there are no external subresources.
-- Print behavior is defined with `@media print`.
-- Narrow mobile layouts work without document-level horizontal overflow.
+- Print behavior is defined with `@media print` and does not clip required content.
+- Layouts work from approximately 360px mobile through tablet and wide desktop
+  without document-level horizontal overflow; wide content scrolls inside its
+  own container.
 - Interactive elements have visible keyboard focus.
 - Text and meaningful controls meet WCAG AA contrast against their actual backgrounds.
 - Motion respects `prefers-reduced-motion`; JavaScript is optional and nonessential.

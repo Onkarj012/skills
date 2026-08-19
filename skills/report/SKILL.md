@@ -27,9 +27,10 @@ context the repository cannot establish, and never fabricate missing facts.
    required when the scan cannot establish it. Batch concise questions; skip
    any answer the repository already proves.
 4. **Design the report.** Ground composition in the reported system's
-   subject-world and audience. When installed, apply Steps 1–6 of
-   `../bespoke-ui/SKILL.md` and consult `../bespoke-ui/CRAFT.md` for coherence,
-   hierarchy, systems, detail, copy, motion, and its quality floor. Adapt those
+   subject-world and audience. Resolve the optional sibling `bespoke-ui` paths
+   from this loaded `SKILL.md` directory. When present, apply Steps 1–6 of its
+   `SKILL.md` and consult its `CRAFT.md` for coherence, hierarchy, systems,
+   detail, copy, motion, and its quality floor. Adapt those
    principles to a report; do not add a fixed report style, CSS skeleton,
    component grammar, or five-style menu. Do not pause for design options
    unless the user explicitly requests options.
@@ -42,12 +43,16 @@ context the repository cannot establish, and never fabricate missing facts.
    and never sent through `waymark preview`. JavaScript is optional and must
    not be needed to read the report. Escape every scanned or user-provided
    value before inserting it; Waymark trusts publisher HTML.
-6. **Critique once before handoff.** Inspect or render the exact document at
-   desktop, narrow mobile, and print widths. Check content visibility,
-   navigation, focus, contrast, heading order, alt text, reduced motion, and
-   horizontal overflow. Make one adversarial generic/slop challenge: argue
-   that a generic LLM/template could have made it, then fix every finding. Run
-   `node skills/report/scripts/report-doc.mjs check REPORT.html`.
+6. **Critique once before handoff.** When browser tooling exists, render the
+   exact document at desktop (~1440px), tablet (~768px), narrow mobile (~360px),
+   print preview, and reduced-motion emulation, in each color scheme the report
+   implements. Check content visibility, navigation, focus, contrast, heading order, alt text,
+   clipping, and horizontal overflow. When browser tooling is unavailable,
+   inspect the source as fallback and report each render check as skipped, never
+   passed. Make one adversarial generic/slop challenge: argue that a generic
+   LLM/template could have made it, then fix every finding. Resolve this skill's
+   install directory from the loaded `SKILL.md` path, then run its bundled
+   checker: `node "<report-skill-directory>/scripts/report-doc.mjs" check REPORT.html`.
 
 ## Modes and handoff
 
@@ -63,6 +68,7 @@ context the repository cannot establish, and never fabricate missing facts.
   Record the returned page ID, URL, TTL, and `updated_at` when maintaining a
   page. Never publish automatically from `/report`.
 
-Done means the requested local artifact exists, the critique and structural
-check pass, and any optional markdown or publication action was explicitly
-requested and completed. Report unknowns and skipped checks plainly.
+Done means the requested local artifact exists, every available browser check
+and the bundled structural check pass, and any unavailable render checks are
+reported as skipped. Any optional markdown or publication action was explicitly
+requested and completed. Report unknowns plainly.
