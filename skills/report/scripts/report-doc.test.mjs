@@ -99,6 +99,39 @@ test("rejects relative subresources too", () => {
   }
 });
 
+test("rejects mixed srcset candidates", () => {
+  const result = checkFixture(
+    "mixed-srcset.html",
+    compliant.replace(
+      "</main>",
+      '<img src="data:image/svg+xml,%3Csvg%3E%3C/svg%3E" srcset="#mark 1x, ./logo.svg 2x"></main>',
+    ),
+  );
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /srcset is forbidden/i);
+});
+
+for (const [name, markup, message] of [
+  ["iframe[src]", '<iframe src="https://example.com/frame.html"></iframe>', "external iframe[src]"],
+  ["object[data]", '<object data="./report.pdf"></object>', "external object[data]"],
+  ["embed[src]", '<embed src="https://example.com/report.pdf">', "external embed[src]"],
+  ["track[src]", '<track src="./captions.vtt">', "external track[src]"],
+  ["SVG use[href]", '<svg><use href="./icons.svg#mark"></use></svg>', "external use[href]"],
+  ["link[href]", '<link rel="preload" href="https://example.com/font.woff2">', "external link[href]"],
+]) {
+  test(`rejects external ${name} resources`, () => {
+    const result = checkFixture(
+      `external-${name.replace(/[^a-z]+/gi, "-").toLowerCase()}.html`,
+      compliant.replace(
+        name === "link[href]" ? "</head>" : "</main>",
+        `${markup}${name === "link[href]" ? "</head>" : "</main>"}`,
+      ),
+    );
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, new RegExp(message.replace(/[()[\]]/g, "\\$&"), "i"));
+  });
+}
+
 test("allows inline data resources and external anchor links", () => {
   const result = checkFixture(
     "inline-resources.html",

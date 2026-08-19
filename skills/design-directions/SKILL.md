@@ -30,7 +30,7 @@ Infer project type from intake. Ask 2–3 questions relevant to that type. Don't
 
 Run `bespoke-ui` Steps 1–6 (subject, fit-filter, grounding, contrast, signature, absorbed test) with the intake as input. It returns 3–5 fit-grounded directions, each with a fit-justification and a named signature — as many as genuinely distinct fits exist, never a filler variant to hit five.
 
-Present the directions in 2–3 lines each and **pause** — the user may redirect before generation.
+Write the brief: per direction, 3–5 lines — name, fit-justification, palette (4–6 named hex), type roles, layout concept, signature. Then **pause** — the user may redirect before generation.
 
 ## Phase 4 — Contrast matrix
 
@@ -70,11 +70,11 @@ Run CRAFT.md's mandatory critique pass once across all variants: see the real ou
 
 One-liner per variant — direction name, composition, signature:
 
-```
+```text
 /1 — Fill-ledger · dense grid, right-aligned tabular columns · dark · signature: the running P&L tape
-/2 — Trade-desk calm · sidebar + focused canvas · light · signature: one oversized position card
-/3 — Terminal-native · keyboard-first, command palette · dark · signature: the ⌘K order ticket
-/4 — Print-report · editorial single column · light · signature: the broadsheet daily summary
+/2 — Trade-desk calm · sidebar + focused canvas · paper-light · signature: one oversized position card
+/3 — Terminal-native · keyboard-first, command palette · phosphor-green · signature: the ⌘K order ticket
+/4 — Print-report · editorial single column · newsprint-duotone · signature: the broadsheet daily summary
 ```
 
 The user is the final critic: they pick, redirect, or ask for another round on a specific variant.

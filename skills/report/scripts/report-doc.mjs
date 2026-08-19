@@ -97,16 +97,35 @@ function checkHtml(source) {
     violations.push("external CSS url() is forbidden");
   }
 
+  const resourceAttributes = {
+    img: ["src", "srcset", "poster"],
+    picture: ["src", "srcset", "poster"],
+    source: ["src", "srcset", "poster"],
+    video: ["src", "srcset", "poster"],
+    audio: ["src", "srcset", "poster"],
+    iframe: ["src"],
+    object: ["data"],
+    embed: ["src"],
+    track: ["src"],
+    use: ["href"],
+    link: ["href"],
+  };
   const resourceTags = [...source.matchAll(/<([a-z][\w:-]*)\b[^>]*>/gi)];
   for (const match of resourceTags) {
     const tag = match[0];
     const tagName = match[1].toLowerCase();
-    if (!new Set(["img", "picture", "source", "video", "audio"]).has(tagName)) {
+    const attributes = resourceAttributes[tagName];
+    if (!attributes) {
       continue;
     }
-    for (const attribute of ["src", "srcset", "poster"]) {
+    for (const attribute of attributes) {
       const value = getAttribute(tag, attribute);
-      if (value !== null && hasExternalResource(value)) {
+      if (value === null) {
+        continue;
+      }
+      if (attribute === "srcset") {
+        violations.push("srcset is forbidden; use a single inline src");
+      } else if (hasExternalResource(value)) {
         violations.push(`external ${tagName}[${attribute}] is forbidden`);
       }
     }
